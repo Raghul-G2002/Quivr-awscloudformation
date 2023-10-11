@@ -1,0 +1,50 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Creating RDS Aurora DB for storing the files into Brain Vectors",
+    "Resources": {
+"DbSecret3": {
+    "Type": "AWS::SecretsManager::Secret",
+    "Properties": {
+        "KmsKeyId": "alias/aws/secretsmanager",
+        "GenerateSecretString": {
+            "ExcludeLowercase": false,
+            "ExcludeNumbers": false,
+            "ExcludePunctuation": false,
+            "ExcludeUppercase": false,
+            "PasswordLength": 32,
+            "ExcludeCharacters": "/\"@\\"
+        }
+    }
+},
+"RdsCluster3": {
+    "Type": "AWS::RDS::DBCluster",
+    "Properties": {
+        "Engine": "aurora-mysql",
+        "EngineVersion": "5.7.mysql_aurora.2.10.0",
+        "DBClusterIdentifier": "aurora-mysql-cluster",
+        "DBSubnetGroupName": "custom-subnet-group",
+        "MasterUsername": "dbadmin",
+        "MasterUserPassword": {
+            "Fn::Sub": "{{resolve:secretsmanager:${DbSecret3}}}"
+        },
+        "Port": "3307",
+        "DatabaseName": "files-to-brain-vectors-db",
+        "StorageEncrypted": false,
+        "BackupRetentionPeriod": 1,
+        "DeletionProtection": false
+    }
+},
+"RdsClusterInstance31": {
+    "Type": "AWS::RDS::DBInstance",
+    "Properties": {
+        "Engine": "aurora-mysql",
+        "DBClusterIdentifier": {
+            "Ref": "RdsCluster3"
+        },
+        "DBInstanceIdentifier": "aurora-mysql-clusterInstance1",
+        "DBInstanceClass": "db.t3.medium",
+        "DBSubnetGroupName": "custom-subnet-group"
+    }
+}
+}
+}
